@@ -25,7 +25,7 @@ class WorkerThread (threading.Thread):
         self.author = author
 
     def run(self):
-        if not re.match("""^[A-Za-z0-9 _.,!"'/$]*$""", self.text): exit()
+        if not re.match("""^[A-Za-z _.,!"'/$]*$""", self.text): exit()
 
         # Links aren't cool
         if 'http' in self.text: exit()
