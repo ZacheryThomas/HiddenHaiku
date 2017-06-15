@@ -12,10 +12,22 @@ import threading
 import time
 import re
 
-global api
+global api, C_TIME
+C_TIME = time.time()
 
 def no_unicode(data):
     return unicodedata.normalize('NFKD' , data).encode('ascii', 'ignore')
+
+
+def set_limiter():
+    global C_TIME
+    C_TIME = time.time() + 1800 # 10 min in the future
+
+
+def is_limited():
+    if time.time() > C_TIME:
+        return False
+    return True
 
 
 class WorkerThread (threading.Thread):
@@ -31,8 +43,13 @@ class WorkerThread (threading.Thread):
         if 'http' in self.text: exit()
 
         result = haiku(self.text)
-        if result:
-            api.update_status(result)
+        if result and not is_limited():
+            api.update_status(result + '\n     -%s' % self.author)
+            #set_limiter()
+
+            print result + '\n\n     -%s' % self.author
+            print
+
             print result
             print '  -@%s' % self.author
             print
