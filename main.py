@@ -37,27 +37,25 @@ class WorkerThread (threading.Thread):
         self.author = author
 
     def run(self):
+        if is_limited(): exit()
+
         if not re.match("""^[A-Za-z _.,!"'/$]*$""", self.text): exit()
 
         # Links aren't cool
         if 'http' in self.text: exit()
 
         result = haiku(self.text)
-        if result and not is_limited():
+        if result:
             api.update_status(result + '\n     -%s' % self.author)
-            #set_limiter()
+            set_limiter()
 
             print result + '\n\n     -%s' % self.author
-            print
-
-            print result
-            print '  -@%s' % self.author
             print
 
 
 class HaikuStreamListener (StreamListener):
     def on_status(self, status):
-        if no_unicode(status.lang) == 'en':
+        if not is_limited() and no_unicode(status.lang) == 'en':
             wt = WorkerThread(status.text, status.author.screen_name)
             wt.start()
 
@@ -79,3 +77,4 @@ while 1:
     except Exception as e:
         print e
     time.sleep(1)
+

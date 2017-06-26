@@ -1,12 +1,22 @@
-__author__ = 'Zachery Thomas'
-
-
+import nltk
 import math
+import string
+import re
 from textstat.textstat import textstat
+from nltk.corpus import cmudict
 
+CMU_DICT = cmudict.dict()
 
 def haiku(text):
     words = text.split()
+
+    for word in words:
+        try:
+            CMU_DICT[re.sub(r'[^\w\s]','',word.lower())]
+        except Exception as ex:
+            #print ex
+            return
+
 
     syllables = [int(math.ceil(textstat.syllable_count(word))) for word in words]
     if sum(syllables) != 17: return
