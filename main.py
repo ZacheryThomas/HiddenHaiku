@@ -39,6 +39,7 @@ class WorkerThread (threading.Thread):
     def run(self):
         if is_limited(): exit()
 
+        # Make sure there are no special characters
         if not re.match("""^[A-Za-z _.,!"'/$]*$""", self.text): exit()
 
         # Links aren't cool
@@ -76,5 +77,5 @@ while 1:
         stream.sample()
     except Exception as e:
         print e
-    time.sleep(1)
+    time.sleep(60)
 
