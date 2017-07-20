@@ -12,22 +12,16 @@ import threading
 import time
 import re
 
-global api, C_TIME
+global api, C_TIME, MIN_TO_WAIT
 C_TIME = time.time()
+MIN_TO_WAIT = 120
+SEC_TO_WAIT = MIN_TO_WAIT * 60
+tweet_found = False
+
 
 def no_unicode(data):
     return unicodedata.normalize('NFKD' , data).encode('ascii', 'ignore')
 
-
-def set_limiter():
-    global C_TIME
-    C_TIME = time.time() + 1800 # 10 min in the future
-
-
-def is_limited():
-    if time.time() > C_TIME:
-        return False
-    return True
 
 
 class WorkerThread (threading.Thread):
@@ -37,8 +31,6 @@ class WorkerThread (threading.Thread):
         self.author = author
 
     def run(self):
-        if is_limited(): exit()
-
         # Make sure there are no special characters
         if not re.match("""^[A-Za-z _.,!"'/$]*$""", self.text): exit()
 
@@ -53,9 +45,14 @@ class WorkerThread (threading.Thread):
             print result + '\n\n     -%s' % self.author
             print
 
+            tweet_found = True
 
 class HaikuStreamListener (StreamListener):
     def on_status(self, status):
+        # if a tweet is found, end the stream
+        if tweet_found = True:
+            return False
+
         if not is_limited() and no_unicode(status.lang) == 'en':
             wt = WorkerThread(status.text, status.author.screen_name)
             wt.start()
@@ -77,5 +74,5 @@ while 1:
         stream.sample()
     except Exception as e:
         print e
-    time.sleep(60)
+    time.sleep(SEC_TO_WAIT)
 
