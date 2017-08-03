@@ -12,8 +12,7 @@ import threading
 import time
 import re
 
-global api, C_TIME, MIN_TO_WAIT
-C_TIME = time.time()
+global api, MIN_TO_WAIT, tweet_found
 MIN_TO_WAIT = 120
 SEC_TO_WAIT = MIN_TO_WAIT * 60
 tweet_found = False
@@ -21,7 +20,6 @@ tweet_found = False
 
 def no_unicode(data):
     return unicodedata.normalize('NFKD' , data).encode('ascii', 'ignore')
-
 
 
 class WorkerThread (threading.Thread):
@@ -39,21 +37,23 @@ class WorkerThread (threading.Thread):
 
         result = haiku(self.text)
         if result:
-            api.update_status(result + '\n     -%s' % self.author)
-            set_limiter()
+            tweet = result + '\n\n     -%s\n#HiddenHaiku' % self.author
+            api.update_status(tweet)
 
-            print result + '\n\n     -%s' % self.author
+            print tweet
             print
 
+            global tweet_found
             tweet_found = True
 
 class HaikuStreamListener (StreamListener):
     def on_status(self, status):
         # if a tweet is found, end the stream
-        if tweet_found = True:
+        if tweet_found:
             return False
 
-        if not is_limited() and no_unicode(status.lang) == 'en':
+        # if tweet is from a location where english is the main language, we'll look into the tweet
+        if no_unicode(status.lang) == 'en':
             wt = WorkerThread(status.text, status.author.screen_name)
             wt.start()
 
@@ -72,7 +72,8 @@ api = API(auth)
 while 1:
     try:
         stream.sample()
+        time.sleep(SEC_TO_WAIT)
+        tweet_found = False
     except Exception as e:
         print e
-    time.sleep(SEC_TO_WAIT)
-
+    time.sleep(1)
